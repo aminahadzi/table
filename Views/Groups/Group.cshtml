@@ -1,0 +1,453 @@
+﻿@model Coffee_Table.ViewModels.GroupViewModel
+@{
+    ViewBag.Title = "Group";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.min.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.0/fullcalendar.print.css" rel="stylesheet" media="print" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.css" rel="stylesheet" />
+
+
+<h2 class="header_heading--primary-black" style="text-align:center">@Model.group.Name</h2>
+<h3 class="header_heading--secondary-black" style="text-align:center">Admin : @Model.group.applicationUser.Name</h3>
+
+
+
+<div class="dropdown" style="margin-left:49rem; margin-top:2rem">
+    <button type="button" class="btn dropdown-toggle" data-toggle="dropdown">
+        Group members
+    </button>
+    <div class="dropdown-menu">
+        @foreach (var user in Model.groupUsers)
+        {
+            <a class="dropdown-item" style="text-decoration:none;color:black" href="#">  @user.applicationUser.Name</a> <br />
+        }
+    </div>
+</div>
+
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><span id="eventTitle"></span></h4>
+            </div>
+            <div class="modal-body">
+                <button id="btnDelete" type="button" class="btn btn-default pull-right btn-sm">
+                    <span class="glyphicon glyphicon-remove">Remove</span>
+                </button>
+                <button id="btnEdit" type="button" class="btn btn-default pull-right btn-sm" style="margin-right:2px">
+                    <span class="glyphicon glyphicon-pencil">Edit</span>
+                </button>
+
+                <p id="pDetails"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="close" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>s
+
+
+<div id="myModalSave" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content" style="display:inline-table;width:350px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Save Event</h4>
+            </div>
+            <div class="modal-body">
+                <form class="col-md-12 form-horizontal">
+                    <input type="hidden" id="hdEventId" value="0" />
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" id="txtSubject" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Start</label>
+                        <div class="input-group date" id="dtp1">
+                            <input type="text" id="txtStart" class="form-control" />
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label><input id="chkIsFullDay" type="checkbox" checked="checked" /> Is Full day event</label>
+                        </div>
+                    </div>
+                    <div class="form-group" id="divEndDate" style="display:none">
+                        <label>End</label>
+                        <div class="input-group date" id="dtp2">
+                            <input type="text" id="txtEnd" class="form-control" />
+                            <span class="input-group-addon">
+                                <span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="txtDescription" rows="3" class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Theme Color</label>
+                        <select id="ddThemeColor" class="form-control">
+                            <option value="">Default</option>
+                            <option value="blue">Blue</option>
+                            <option value="red">Red</option>
+                            <option value="black">Black</option>
+                            <option value="green">Green</option>
+                        </select>
+                    </div>
+                    <button type="button" id="btnSave" class="btn btn-success">Save</button>
+                    <button type="button" class="close" data-dismiss="modal">Close</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="calender">
+
+</div>
+<input type="hidden" id="hiddenInput" value="@Model.group.Id" />
+
+
+<a href="/groups/listgroups/@Model.currentUser.Name" style="margin-left:46rem" class="butn black-button">List Groups</a>
+
+
+@section Scripts{
+
+
+
+    <script>
+        $(document).ready(function () {
+
+            {
+                var dateFormat = function () {
+                    var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g,
+                        timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[-+]\d{4})?)\b/g,
+                        timezoneClip = /[^-+\dA-Z]/g,
+                        pad = function (val, len) {
+                            val = String(val);
+                            len = len || 2;
+                            while (val.length < len) val = "0" + val;
+                            return val;
+                        };
+
+                    // Regexes and supporting functions are cached through closure
+                    return function (date, mask, utc) {
+                        var dF = dateFormat;
+
+                        // You can't provide utc if you skip other args (use the "UTC:" mask prefix)
+                        if (arguments.length == 1 && Object.prototype.toString.call(date) == "[object String]" && !/\d/.test(date)) {
+                            mask = date;
+                            date = undefined;
+                        }
+
+                        // Passing date through Date applies Date.parse, if necessary
+                        date = date ? new Date(date) : new Date;
+                        if (isNaN(date)) throw SyntaxError("invalid date");
+
+                        mask = String(dF.masks[mask] || mask || dF.masks["default"]);
+
+                        // Allow setting the utc argument via the mask
+                        if (mask.slice(0, 4) == "UTC:") {
+                            mask = mask.slice(4);
+                            utc = true;
+                        }
+
+                        var _ = utc ? "getUTC" : "get",
+                            d = date[_ + "Date"](),
+                            D = date[_ + "Day"](),
+                            m = date[_ + "Month"](),
+                            y = date[_ + "FullYear"](),
+                            H = date[_ + "Hours"](),
+                            M = date[_ + "Minutes"](),
+                            s = date[_ + "Seconds"](),
+                            L = date[_ + "Milliseconds"](),
+                            o = utc ? 0 : date.getTimezoneOffset(),
+                            flags = {
+                                d: d,
+                                dd: pad(d),
+                                ddd: dF.i18n.dayNames[D],
+                                dddd: dF.i18n.dayNames[D + 7],
+                                m: m + 1,
+                                mm: pad(m + 1),
+                                mmm: dF.i18n.monthNames[m],
+                                mmmm: dF.i18n.monthNames[m + 12],
+                                yy: String(y).slice(2),
+                                yyyy: y,
+                                h: H % 12 || 12,
+                                hh: pad(H % 12 || 12),
+                                H: H,
+                                HH: pad(H),
+                                M: M,
+                                MM: pad(M),
+                                s: s,
+                                ss: pad(s),
+                                l: pad(L, 3),
+                                L: pad(L > 99 ? Math.round(L / 10) : L),
+                                t: H < 12 ? "a" : "p",
+                                tt: H < 12 ? "am" : "pm",
+                                T: H < 12 ? "A" : "P",
+                                TT: H < 12 ? "AM" : "PM",
+                                Z: utc ? "UTC" : (String(date).match(timezone) || [""]).pop().replace(timezoneClip, ""),
+                                o: (o > 0 ? "-" : "+") + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4),
+                                S: ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 != 10) * d % 10]
+                            };
+
+                        return mask.replace(token, function ($0) {
+                            return $0 in flags ? flags[$0] : $0.slice(1, $0.length - 1);
+                        });
+                    };
+                }();
+
+                // Some common format strings
+                dateFormat.masks = {
+                    "default": "ddd mmm dd yyyy HH:MM:ss",
+                    shortDate: "m/d/yy",
+                    mediumDate: "mmm d, yyyy",
+                    longDate: "mmmm d, yyyy",
+                    fullDate: "dddd, mmmm d, yyyy",
+                    shortTime: "h:MM TT",
+                    mediumTime: "h:MM:ss TT",
+                    longTime: "h:MM:ss TT Z",
+                    isoDate: "yyyy-mm-dd",
+                    isoTime: "HH:MM:ss",
+                    isoDateTime: "yyyy-mm-dd'T'HH:MM:ss",
+                    isoUtcDateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'"
+                };
+
+                // Internationalization strings
+                dateFormat.i18n = {
+                    dayNames: [
+                        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+                        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+                    ],
+                    monthNames: [
+                        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                        "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+                    ]
+                };
+
+                // For convenience...
+                Date.prototype.format = function (mask, utc) {
+                    return dateFormat(this, mask, utc);
+                };
+
+            }
+
+
+            var events = [];
+            var selectedEvent = null;
+            var groupId = document.getElementById("hiddenInput").value;
+            FetchEventAndRenderCalender();
+
+            function FetchEventAndRenderCalender() {
+                var events = [];
+                $.ajax({
+                    type: "GET",
+                    url: "/api/events/GetEvents/" + groupId,
+                    success: function (data) {
+                        $.each(data, function (i, v) {
+                            events.push({
+                                eventId: v.id,
+                                title: v.subject,
+                                description: v.description,
+                                start: moment(v.start),
+                                end: v.end != null ? moment(v.end) : null,
+                                color: v.themeColor,
+                                allDay: v.isFullDay
+                            });
+                        });
+
+                        GenerateCalender(events)
+                    },
+                    error: function () {
+                        alert("failed");
+                    }
+
+                });
+            }
+
+
+            function GenerateCalender(events) {
+
+                $("#calender").fullCalendar("destroy");
+                $("#calender").fullCalendar({
+                    contentHeight: 400,
+                    defaultDate: new Date,
+                    timeFormat: "h(:mm)a",
+                    header: {
+                        left: "prev,next today",
+                        center: "title",
+                        right: "month,basicWeek,basicDay,agenda"
+                    },
+                    eventLimit: true,
+                    eventColor: "#378006",
+                    events: events,
+                    eventClick: function (calEvent, jsEvent, view) {
+                        selectedEvent = calEvent;
+                        $("#myModal  #eventTitle").text(calEvent.title);
+                        var $description = $("<div/>");
+                        $description.append($("<p/>").html("<b>Start :</b>" + calEvent.start.format("MM/DD/YYYY H:mm A")));
+                        if (calEvent.end != null) {
+                            $description.append($("<p/>").html("<b>End :</b>" + calEvent.end.format("MM/DD/YYYY H:mm A")));
+                        }
+                        $description.append($("<p/>").html("<b>Description : </b>" + calEvent.description));
+
+                        $("#myModal #pDetails").empty().html($description);
+
+                        $("#myModal").modal();
+                    },
+                    selectable: true,
+                    select: function (start, end) {
+                        selectedEvent = {
+                            eventId: 0,
+                            title: "",
+                            description: "",
+                            start: start,
+                            end: end,
+                            color: "",
+                            allDay: false
+                        };
+                        openAddEditForm();
+                        $("#calender").fullCalendar("unselect");
+                    },
+                    editable: true,
+                    eventDrop: function (event) {
+                        var data = {
+                            Id: event.eventId,
+                            Subject: event.title,
+                            Description: event.description,
+                            Start: event.start.format("MM/DD/YYYY H:mm A"),
+                            End: event.end != null ? event.end.format("MM/DD/YYYY H:mm A") : null,
+                            ThemeColor: event.color,
+                            isFullDay: event.allDay,
+                            GroupId: groupId
+                        }
+                        SaveEvent(data);
+                    }
+
+                });
+            }
+
+            $("#btnEdit").click(function () {
+                openAddEditForm();
+
+            });
+
+            $("#btnDelete").click(function () {
+                var $url = "/api/events/DeleteEvent/" + selectedEvent.eventId;
+                if (selectedEvent != null && confirm("Are you sure you want to delete this event")) {
+                    $.ajax({
+                        type: "POST",
+                        url: $url,
+                        success: function (data) {
+                            FetchEventAndRenderCalender();
+                            $("#myModal").modal("hide");
+                        }
+                    });
+
+                }
+
+            });
+
+
+            $("#dtp1,#dtp2").datetimepicker({
+                format: "MM/DD/YYYY H:mm A"
+            });
+
+            $("#chkIsFullDay").change(function () {
+                if ($(this).is(":checked")) {
+                    $("#divEndDate").hide();
+                } else {
+                    $("#divEndDate").show();
+                }
+            });
+
+
+            function openAddEditForm() {
+                if (selectedEvent != null) {
+                    $("#hdEventId").val(selectedEvent.eventId);
+                    $("#txtSubject").val(selectedEvent.title);
+                    $("#txtStart").val(selectedEvent.start.format("MM/DD/YYYY H:mm A"));
+                    $("#chkIsFullDay").prop("checked", selectedEvent.allDay || false);
+                    $("#chkIsFullDay").change();
+                    $("#txtEnd").val(selectedEvent.end != null ? selectedEvent.end.format("MM/DD/YYYY H:mm A") : "");
+                    $("#txtDescription").val(selectedEvent.description);
+                    $("#ddThemeColor").val(selectedEvent.color);
+                }
+                $("#myModal").modal("hide");
+                $("#myModalSave").modal();
+            }
+
+            $("#btnSave").click(function () {
+                if ($("#txtSubject").val().trim() == "") {
+                    alert("Subject required");
+                    return;
+                }
+                if ($("#txtStart").val().trim() == "") {
+                    alert("Start date required");
+                    return;
+                }
+                if ($("#chkIsFullDay").is(":checked") == false && $("#txtEnd") == "") {
+                    alert("End date required");
+                    return;
+                }
+                else {
+                    var startDate = moment($("#txtStart").val(), "MM/DD/YYYY H:mm A").toDate();
+                    var endDate = moment($("#txtEnd").val(), "MM/DD/YYYY H:mm A").toDate();
+                    if (startDate > endDate) {
+                        alert("Invalid end date");
+                        return;
+                    }
+                }
+
+
+                var data = {
+                    Id: $("#hdEventId").val(),
+                    Subject: $("#txtSubject").val().trim(),
+                    Description: $("#txtDescription").val(),
+                    Start: $("#txtStart").val().trim(),
+                    End: $("#chkIsFullDay").is(":checked") ? null : $("#txtEnd").val().trim(),
+                    ThemeColor: $("#ddThemeColor").val(),
+                    isFullDay: $("chkIsFullDay").is(":checked"),
+                    GroupId: groupId
+                };
+                SaveEvent(data);
+            });
+
+
+
+            function SaveEvent(data) {
+                var start = data.Start;
+                //                var modifiedStart = start.slice(0, 16) + ":00" + start.slice(16);
+                //encodeURIComeponent
+                // var modifiedStart = start.slice(0, 2) + "%2F" + start.slice(3, 5) + "%2F" + start.slice(6);
+                //var url = "/api/events/saveevent/" + data.Id + "/" + data.Subject + "/" + data.Description + "/" + data.Start.toISOString() + "/" + data.End + "/" + data.isFullDay + "/" + data.ThemeColor + "/" + groupId;
+                // encodeURIComponent(url);
+                $.ajax({
+                    type: "POST",
+                    url: "/api/events/SaveEvent",
+                    dataType: "json",
+                    data: { Id: data.Id, Subject: data.Subject, Description: data.Description, Start: data.Start, End: data.End, isFullDay: data.isFullDay, ThemeColor: data.ThemeColor, GroupId: data.GroupId },
+                    success: function () {
+                        FetchEventAndRenderCalender();
+                        $("#myModalSave").modal("hide");
+                    }
+                });
+
+            }
+        });
+
+
+
+    </script>
+
+}

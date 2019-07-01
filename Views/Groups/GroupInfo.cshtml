@@ -1,0 +1,23 @@
+﻿@model Coffee_Table.ViewModels.GroupViewModel
+@{
+    ViewBag.Title = "Group";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="header_heading--primary-black" style="text-align:center">@Model.group.Name</h2>
+<h3 class="header_heading--secondary-black" style="text-align:center">Admin : @Model.group.applicationUser.Name</h3>
+
+
+
+<div class="dropdown" style="margin-left:49rem; margin-top:2rem">
+    <button type="button" class="btn dropdown-toggle"  data-toggle="dropdown">
+        Group members
+    </button>
+    <div class="dropdown-menu">
+        @foreach (var user in Model.groupUsers)
+        {
+            <a class="dropdown-item" style="text-decoration:none;color:black" href="#">  @user.applicationUser.Name</a><br />
+        }
+    </div>
+</div>
+

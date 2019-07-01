@@ -1,0 +1,35 @@
+﻿@model Coffee_Table.ViewModels.JoinViewModel
+@{
+    ViewBag.Title = "Join";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="header_heading--primary-black">Join</h2>
+
+<h2 style="text-align:center">@Model.message</h2>
+
+<div class="join-bg">
+    <div class="centered">
+        @using (Html.BeginForm("PasswordCheck", "Groups"))
+        {
+            <h3>Please enter the password of your group</h3>
+            @Html.ValidationSummary()
+            <div class="form-group" style="margin-left:12rem">
+                @Html.PasswordFor(m => m.password)
+                @Html.ValidationMessageFor(m => m.password)
+            </div>
+
+            @Html.HiddenFor(m => m.groupId)
+            @Html.HiddenFor(m => m.userId)
+            @Html.AntiForgeryToken()
+    <div style="text-align:center;margin-right:8.5rem">
+        <button type="submit" class="butn black-button">Check Password</button>
+    </div>
+        }
+    </div>
+</div>
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+}
+

@@ -1,0 +1,23 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<header>
+    <div class="header-box">
+        <span class="header_heading--primary">Coffee tablee</span> <br />
+        <span class="header_heading--secondary">Let's meet fast!</span>
+    </div>
+    <div class="button-box">
+        @Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink", @class = "butn black-button" })
+        @Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class = "butn black-button" })
+    </div>
+</header>
+
+
+
+
+
+
+<!-- <ul >
+     <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+     <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+ </ul>-->

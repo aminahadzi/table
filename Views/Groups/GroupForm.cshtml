@@ -1,0 +1,37 @@
+﻿@model Coffee_Table.ViewModels.GroupFormViewModel
+@{
+    ViewBag.Title = "CreateGroup";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    Model.group.applicationUserId = Model.AdminId;
+}
+
+<h2 class="header_heading--secondary-black" style="text-align:center;letter-spacing:1rem">@Model.sourcePage</h2>
+
+<div class="registration-bg">
+    <div class="centered-group">
+        @using (Html.BeginForm("Save", "Groups"))
+        {
+            @Html.ValidationSummary()
+            <div class="form-group">
+                @Html.LabelFor(m => m.group.Name)
+                @Html.TextBoxFor(m => m.group.Name, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.group.Name)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.group.Password)
+                @Html.PasswordFor(m => m.group.Password, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.group.Password)
+            </div>
+            @Html.HiddenFor(m => m.group.Id)
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.group.applicationUserId);
+
+            <button class="butn black-button" style="margin-left:8rem" type="submit">Save</button>
+        }
+    </div>
+</div>
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
